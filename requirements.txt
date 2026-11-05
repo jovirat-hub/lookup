@@ -1,0 +1,7 @@
+python-telegram-bot
+zstandard
+pycryptodome
+curl_cffi
+colorama
+requests
+urllib3
