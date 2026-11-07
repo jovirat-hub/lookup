@@ -39,8 +39,22 @@ BOT_TOKEN      = os.getenv("BOT_TOKEN", "8794930784:AAFu3Bw3JHNVaGK056DsX_g5Js7D
 ADMIN_IDS      = {int(x) for x in os.getenv("ADMIN_IDS", "8477982865").split(",")}
 CHANNEL_ID     = int(os.getenv("CHANNEL_ID", "-1004382349032"))
 OWNER_USERNAME = "@ZyronDevv"
-DB_FILE        = os.getenv("DB_PATH", "/data/bot_lookup.db")
+DB_FILE = os.getenv("DB_PATH", "/data/bot_lookup.db")
 
+# Ensure the DB directory exists and is writable; fall back to local file if not.
+try:
+    _db_dir = os.path.dirname(DB_FILE) or "."
+    os.makedirs(_db_dir, exist_ok=True)
+    # quick writability check
+    _test = os.path.join(_db_dir, ".write_test")
+    with open(_test, "w") as _f:
+        _f.write("ok")
+    os.remove(_test)
+except Exception as _e:
+    print(f"[WARN] Cannot use DB path {DB_FILE} ({_e}); falling back to ./bot_lookup.db")
+    DB_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bot_lookup.db")
+    os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
+    
 # ── DAILY LIMIT CONFIG ───────────────────────────────────────────────
 DAILY_FREE_LIMIT = 10
 DAILY_RESET_TZ   = timezone.utc
