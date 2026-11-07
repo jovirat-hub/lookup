@@ -35,7 +35,7 @@ from telegram.ext import (
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # ── CONFIG ───────────────────────────────────────────────────────────
-BOT_TOKEN      = os.getenv("BOT_TOKEN", "8794930784:AAG_7VA3mwhavhDF922dHk_iAk_ZmloIrks")
+BOT_TOKEN      = os.getenv("BOT_TOKEN", "8794930784:AAEIPL2cVVS0fA1Icys1wq6S6icVttpVlLw")
 ADMIN_IDS      = {int(x) for x in os.getenv("ADMIN_IDS", "8477982865").split(",")}
 CHANNEL_ID     = int(os.getenv("CHANNEL_ID", "-1004382349032"))
 OWNER_USERNAME = "@ZyronDevv"
@@ -1674,7 +1674,7 @@ def lookup_player_data(player_id_or_nickname, server_id=None, guid=None, session
             except ConnectionError as e:
                 error_msg = str(e)
                 last_error = f"Connection error: {error_msg}"
-                if "LOGIN_FAILED" in error_msg:
+                if "JUST TRY AGAIN" in error_msg:
                     remove_failed_device_id(current_device_id)
                 if current_device_id in current_device_ids:
                     current_device_ids.remove(current_device_id)
