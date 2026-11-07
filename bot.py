@@ -1603,8 +1603,8 @@ def lookup_player_data(player_id_or_nickname, server_id=None, guid=None, session
         if not device_ids:
             return {"error": "No device IDs available", "status": "error"}
 
-        retry_count = 0
-        max_retries = 10
+        retry_count = 10
+        max_retries = 20
         result = None
         _creation_ts = 0
         current_device_ids = device_ids.copy()
