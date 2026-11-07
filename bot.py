@@ -1,3 +1,9 @@
+# ─────────────────────────────────────────────────────────────────────
+#  bot.py  —  Telegram bot + MLBB Lookup engine (single file)
+#  - Daily limit: 3 lookups per free user (admins + premium exempt)
+#  - Queue for free users, instant for premium/admin
+#  - Lookup engine (from Lookup.py) inlined below
+# ─────────────────────────────────────────────────────────────────────
 import os
 import sys
 import time
@@ -29,7 +35,7 @@ from telegram.ext import (
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # ── CONFIG ───────────────────────────────────────────────────────────
-BOT_TOKEN      = os.getenv("BOT_TOKEN", "8794930784:AAHPrq2Ul3sk96jUYaHv9R6M5O84PNZJkBQ")
+BOT_TOKEN      = os.getenv("BOT_TOKEN", "8794930784:AAFRosUPTIS7sQ2kEbinGuiOgX5OpZiw-fM")
 ADMIN_IDS      = {int(x) for x in os.getenv("ADMIN_IDS", "8477982865").split(",")}
 CHANNEL_ID     = int(os.getenv("CHANNEL_ID", "-1004382349032"))
 OWNER_USERNAME = "@ZyronDevv"
@@ -585,7 +591,6 @@ class SdpStruct(dict):
         super().update(other)
         self._pack_to_binary()
 
-# ── DEVICE POOL ─────────────────────────────────────────────────────
 DEVICE_IDS = [
     'and_a01476090ccb450e255426d014802b93xx7dl43sippc1q4od5a87c27-7f12-4204-8d0e-6ed5648457e9',
     'and_c92437c75572f50783dae442d90bf15aj1vxxcqw23v0r8hx5fc92e18-6530-4522-88fc-2976ada3f320',
@@ -1969,13 +1974,14 @@ async def run_lookup(role_id, zone_id, retries: int = 3) -> Dict[str, Any]:
             await asyncio.sleep(2 ** attempt)
     return {"status": "error", "error": last_err or "Lookup failed after retries"}
 
+# ── LOADING ANIMATION ────────────────────────────────────────────────
 LOADING_FRAMES = [
-    ("🛰️", "Connecting to login server", 5),
-    ("📡", "Fetching game server", 5),
-    ("🔐", "Handshaking account", 5),
-    ("🧬", "Parsing player profile", 5),
-    ("🃏", "Loading hero & skin data", 5),
-    ("✨", "Finalizing report", 5),
+    ("🛰️", "Connecting to login server", 15),
+    ("📡", "Fetching game server", 30),
+    ("🔐", "Handshaking account", 50),
+    ("🧬", "Parsing player profile", 70),
+    ("🃏", "Loading hero & skin data", 85),
+    ("✨", "Finalizing report", 97),
 ]
 
 def _progress_bar(pct: int, width: int = 12) -> str:
@@ -2003,7 +2009,7 @@ async def _animate_search(message, role_id, zone_id):
         pass
     except Exception as e:
         logger.debug("animation loop ended: %s", e)
-        
+
 # ── FORMAT OUTPUT ────────────────────────────────────────────────────
 def format_result(role_id, zone_id, player_data: dict) -> str:
     d = player_data or {}
@@ -2150,8 +2156,8 @@ async def process_lookup(user_id, role_id, zone_id, update: Update,
         logger.info("user %s daily usage -> %s/%s", user_id, used, DAILY_FREE_LIMIT)
 
     status_msg = await update.message.reply_text(
-         _loading_text(role_id, zone_id, *LOADING_FRAMES[0][:2], LOADING_FRAMES[0][2]),
-         parse_mode="HTML",
+        _loading_text(role_id, zone_id, *LOADING_FRAMES[0][:2], LOADING_FRAMES[0][2]),
+        parse_mode="HTML",
     )
     anim_task = asyncio.create_task(_animate_search(status_msg, role_id, zone_id))
     try:
