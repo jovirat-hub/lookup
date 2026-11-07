@@ -1,9 +1,3 @@
-# ─────────────────────────────────────────────────────────────────────
-#  bot.py  —  Telegram bot + MLBB Lookup engine (single file)
-#  - Daily limit: 3 lookups per free user (admins + premium exempt)
-#  - Queue for free users, instant for premium/admin
-#  - Lookup engine (from Lookup.py) inlined below
-# ─────────────────────────────────────────────────────────────────────
 import os
 import sys
 import time
@@ -1701,20 +1695,16 @@ async def run_lookup(role_id, zone_id, retries: int = 3) -> Dict[str, Any]:
             await asyncio.sleep(2 ** attempt)
     return {"status": "error", "error": last_err or "Lookup failed after retries"}
 
-# ── LOADING ANIMATION ────────────────────────────────────────────────
-# More frames + smoother progress = visibly moving bar.
 LOADING_FRAMES = [
-    ("🛰️", "Connecting to login server", 8),
-    ("📡", "Fetching game server",      20),
-    ("🔐", "Handshaking account",       35),
-    ("🧬", "Parsing player profile",    50),
-    ("🃏", "Loading hero & skin data",  65),
-    ("📊", "Reading match history",     78),
-    ("✨", "Finalizing report",         90),
+    ("🛰️", "Connecting to login server", 5),
+    ("📡", "Fetching game server", 5),
+    ("🔐", "Handshaking account", 5),
+    ("🧬", "Parsing player profile", 5),
+    ("🃏", "Loading hero & skin data", 5),
+    ("✨", "Finalizing report", 5),
 ]
 
 def _progress_bar(pct: int, width: int = 12) -> str:
-    pct = max(0, min(100, int(pct)))
     filled = round(width * pct / 100)
     return "▰" * filled + "▱" * (width - filled)
 
@@ -1727,54 +1717,19 @@ def _loading_text(role_id, zone_id, icon, label, pct):
     )
 
 async def _animate_search(message, role_id, zone_id):
-    """
-    Drives the loading bar forward in smooth increments while the lookup runs.
-    Stops only when cancelled by the caller (when the real result is ready).
-    """
-    # Build a smooth sequence: for each frame, subdivide into small steps
-    # so the bar visibly moves every ~0.8s instead of jumping 15% at a time.
-    sequence = []
-    prev_pct = 0
-    for icon, label, target_pct in LOADING_FRAMES:
-        # break the jump from prev_pct -> target_pct into 1% steps
-        for p in range(prev_pct + 1, target_pct + 1):
-            sequence.append((icon, label, p))
-        prev_pct = target_pct
-
-    # Cap the animation at 97% — the final 100% is set by process_lookup
-    # once the real result comes back. This prevents the bar from sitting
-    # at 100% while still "working".
-    sequence = [(i, l, min(p, 97)) for (i, l, p) in sequence]
-
     try:
-        idx = 0
-        # Keep looping the *last few* frames forever (until cancelled) so the
-        # user always sees motion, but never exceeds 97%.
         while True:
-            if idx < len(sequence):
-                icon, label, pct = sequence[idx]
-                idx += 1
-            else:
-                # Hold near the top but keep pulsing between 95–97%
-                import random as _r
-                icon, label, _ = LOADING_FRAMES[-1]
-                pct = 95 + _r.randint(0, 2)
-
-            try:
+            for icon, label, pct in LOADING_FRAMES:
                 await message.edit_text(
                     _loading_text(role_id, zone_id, icon, label, pct),
                     parse_mode="HTML",
                 )
-            except Exception:
-                # Telegram "message is not modified" or rate-limit — ignore
-                pass
-
-            await asyncio.sleep(0.9)
+                await asyncio.sleep(1.2)
     except asyncio.CancelledError:
         pass
     except Exception as e:
         logger.debug("animation loop ended: %s", e)
-
+        
 # ── FORMAT OUTPUT ────────────────────────────────────────────────────
 def format_result(role_id, zone_id, player_data: dict) -> str:
     d = player_data or {}
