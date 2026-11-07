@@ -1232,7 +1232,7 @@ class GameConnection(BaseConnection):
     def __enter__(self):
         super().__enter__()
         if not self.login_to_login_server():
-            raise ConnectionError("LOGIN_FAILED")
+            raise ConnectionError("JUST TRY AGAIN IN A FEW MIN")
         if not self.get_game_server():
             raise ConnectionError("SERVER_SELECTION_FAILED")
         return self
