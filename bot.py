@@ -35,7 +35,7 @@ from telegram.ext import (
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # ── CONFIG ───────────────────────────────────────────────────────────
-BOT_TOKEN      = os.getenv("BOT_TOKEN", "8794930784:AAEIPL2cVVS0fA1Icys1wq6S6icVttpVlLw")
+BOT_TOKEN      = os.getenv("BOT_TOKEN", "8794930784:AAEW3xBpv_GW4trACmT7TRHIwIam63gHuxk")
 ADMIN_IDS      = {int(x) for x in os.getenv("ADMIN_IDS", "8477982865").split(",")}
 CHANNEL_ID     = int(os.getenv("CHANNEL_ID", "-1004382349032"))
 OWNER_USERNAME = "@ZyronDevv"
