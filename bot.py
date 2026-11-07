@@ -2386,7 +2386,9 @@ async def lookup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    if not (is_admin(user_id) or is_premium(user_id)):
+    is_unlimited = is_admin(user_id) or is_premium(user_id)
+
+    if not is_unlimited:
         used = get_daily_count(user_id)
         if used >= DAILY_FREE_LIMIT:
             secs = _seconds_until_reset()
@@ -2400,24 +2402,27 @@ async def lookup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
 
-    if is_admin(user_id) or is_premium(user_id):
-        await process_lookup(user_id, role_id, zone_id, update, context,
-                             consume_daily=False)
-        return
-
+    # ALL users (including admin/premium) go through the queue now
     await lookup_queue.put({
         "user_id": user_id, "role_id": role_id, "zone_id": zone_id,
-        "update": update, "context": context, "consume_daily": True,
+        "update": update, "context": context,
+        "consume_daily": not is_unlimited,
     })
     qsize = lookup_queue.qsize()
     dots = "🟠" * min(qsize, 5) + "⚪" * max(0, 5 - qsize)
-    remaining = max(0, DAILY_FREE_LIMIT - get_daily_count(user_id) - 1)
+
+    if is_unlimited:
+        limit_line = "💎 <b>Unlimited</b> (premium/admin) — queued"
+    else:
+        remaining = max(0, DAILY_FREE_LIMIT - get_daily_count(user_id) - 1)
+        limit_line = f"{E_CLOCK} Free lookups left today: <b>{remaining}</b>/{DAILY_FREE_LIMIT}"
+
     queue_msg = await update.message.reply_text(
         f"{E_HOURGLASS} <b>Queued</b>\n"
         f"<code>{role_id}:{zone_id}</code>\n\n"
         f"{dots}\n"
         f"Position: <b>{qsize}</b>\n"
-        f"{E_CLOCK} Free lookups left today: <b>{remaining}</b>/{DAILY_FREE_LIMIT}\n\n"
+        f"{limit_line}\n\n"
         f"💎 Skip the queue + unlimited lookups — {OWNER_USERNAME}\n"
         f"Use /redeem <code>&lt;key&gt;</code> to activate {E_KEY}",
         parse_mode="HTML",
